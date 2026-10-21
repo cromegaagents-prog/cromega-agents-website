@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ember &amp; Oak — Concept demonstration by Cromega Agents</title>
+<meta name="description" content="Concept website for a fictional wood-fired restaurant, with a live 3D oven. Designed and built by Cromega Agents as a demonstration.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#120c09">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wdth,wght@75..100,400..800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --char:#120c09; --char2:#1b130e; --char3:#251a13; --cream:#f3e7d8; --cream2:#e9dac6; --ember:#ff7a3d; --ember2:#e4602a; --muted:#b8a596; --muted2:#8d7a6b;
+  --line:rgba(243,231,216,.14); --line-c:rgba(18,12,9,.14);
+  --f-d:"Instrument Serif","Times New Roman",serif; --f-u:"Archivo","Arial Narrow",system-ui,sans-serif; --f-m:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --hd:68px; --g:max(20px,env(safe-area-inset-left,0px)); --gr:max(20px,env(safe-area-inset-right,0px));
+}
+*{box-sizing:border-box}
+html{background:var(--char);scroll-padding-top:calc(var(--hd) + 10px)}
+body{margin:0;background:var(--char);color:var(--cream);font-family:var(--f-u);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit}
+img{max-width:100%;display:block}
+.w{max-width:1280px;margin:0 auto;padding-left:var(--g);padding-right:var(--gr)}
+.mono{font-family:var(--f-m);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:50px;padding:0 22px;border-radius:999px;font:700 15px/1 var(--f-u);letter-spacing:.01em;text-decoration:none;border:0;cursor:pointer;transition:transform .25s,background .25s,box-shadow .25s}
+.btn.cta{background:var(--ember);color:#1a0904;box-shadow:0 14px 30px -14px rgba(255,122,61,.8)}
+.btn.cta:hover{transform:translateY(-2px);background:#ff8b55}
+.btn.ghost{background:transparent;color:var(--cream);box-shadow:inset 0 0 0 1px rgba(243,231,216,.35)}
+.btn.ghost:hover{box-shadow:inset 0 0 0 1px var(--cream)}
+.btn:focus-visible,a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ember);outline-offset:3px}
+
+/* concept ribbon */
+.ribbon{background:#000;color:var(--cream2);font-size:13px;text-align:center;padding:8px var(--gr) 8px var(--g);border-bottom:1px solid var(--line)}
+.ribbon b{color:var(--ember);font-family:var(--f-m);font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-right:8px;font-weight:500}
+.ribbon a{color:var(--cream)}
+
+/* header */
+.hd{position:sticky;top:0;z-index:30;background:rgba(18,12,9,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.hd .w{display:flex;align-items:center;gap:22px;height:var(--hd)}
+.logo{display:flex;align-items:baseline;gap:10px;text-decoration:none;margin-right:auto}
+.logo b{font-family:var(--f-d);font-style:italic;font-weight:400;font-size:30px;letter-spacing:-.01em;color:#fff}
+.logo b i{font-style:normal;color:var(--ember)}
+.tag{font-family:var(--f-m);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--char);background:var(--cream2);padding:3px 7px;border-radius:4px;transform:translateY(-4px)}
+.nav{display:flex;gap:22px;font-size:15px}
+.nav a{text-decoration:none;color:var(--muted);transition:color .2s}
+.nav a:hover,.nav a.on{color:var(--cream)}
+.open{font-size:13px;color:var(--muted);line-height:1.2;text-align:right}
+.open b{display:block;color:var(--cream);font-weight:600;font-size:14px}
+.open i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#55d27a;margin-right:6px;box-shadow:0 0 10px #55d27a}
+.hd .btn{height:42px;padding:0 18px;font-size:14px}
+.burger{display:none;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--cream);cursor:pointer}
+.burger i,.burger i::before,.burger i::after{display:block;width:18px;height:2px;background:currentColor;margin:auto;position:relative;transition:transform .25s}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}.burger i::before{top:-6px}.burger i::after{top:6px}
+.mnav{display:none}
+
+/* fire section: sticky live scene + scrolling chapters */
+.fire{position:relative;height:340vh}
+.stage{position:sticky;top:var(--hd);height:calc(100svh - var(--hd));overflow:hidden;background:#070504}
+.stage .scene,.stage .fallback{position:absolute;inset:0;width:100%;height:100%}
+.stage .fallback{object-fit:cover}
+.gl .stage .fallback{display:none}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(7,5,4,.86) 0%,rgba(7,5,4,.55) 34%,rgba(7,5,4,0) 62%),linear-gradient(0deg,rgba(7,5,4,.7),rgba(7,5,4,0) 30%)}
+.note{position:absolute;right:calc(16px + env(safe-area-inset-right,0px));top:16px;z-index:3;max-width:300px;font-size:12px;line-height:1.35;color:var(--cream2);background:rgba(7,5,4,.66);border:1px solid var(--line);border-radius:8px;padding:8px 10px;backdrop-filter:blur(6px)}
+.note b{color:var(--ember);font-weight:600}
+.chapters{position:absolute;inset:0;z-index:2;pointer-events:none}
+.ch{position:absolute;left:0;right:0;bottom:0;top:0;display:flex;align-items:center;opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
+.ch.on{opacity:1;transform:none;pointer-events:auto}
+.ch .w{width:100%}
+.ch-in{max-width:560px}
+.eyebrow{color:var(--ember);margin-bottom:16px}
+.h1{font-family:var(--f-d);font-weight:400;font-size:clamp(52px,7.6vw,112px);line-height:.92;letter-spacing:-.02em;margin:0 0 22px;text-wrap:balance}
+.h1 em{color:var(--ember);font-style:italic}
+.h2{font-family:var(--f-d);font-weight:400;font-size:clamp(40px,5vw,74px);line-height:.98;letter-spacing:-.015em;margin:0 0 18px;text-wrap:balance}
+.h2 em{color:var(--ember)}
+.lead{font-size:clamp(17px,1.4vw,20px);color:var(--cream2);max-width:30em;margin:0 0 26px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.facts{display:flex;flex-wrap:wrap;gap:10px 22px;margin:22px 0 0;padding:0;list-style:none;color:var(--muted);font-size:14px}
+.facts li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ember);margin-right:8px;transform:translateY(-2px)}
+.progress{position:absolute;left:var(--g);bottom:22px;z-index:3;display:flex;gap:6px}
+.progress i{width:34px;height:3px;border-radius:3px;background:rgba(243,231,216,.22);overflow:hidden;position:relative}
+.progress i b{position:absolute;inset:0;background:var(--ember);transform-origin:left;transform:scaleX(var(--f,0))}
+
+/* sections */
+.sec{padding:clamp(80px,10vw,140px) 0}
+.cream{background:var(--cream);color:var(--char)}
+.cream .eyebrow{color:var(--ember2)}
+.cream .lead{color:#4a3a2f}
+.split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(30px,5vw,80px);align-items:start}
+.menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(24px,4vw,56px)}
+.menu h3{font-family:var(--f-m);font-weight:500;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ember2);margin:0 0 6px;padding-bottom:10px;border-bottom:1px solid var(--line-c)}
+.dish{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:14px 0;border-bottom:1px solid var(--line-c)}
+.dish b{font-family:var(--f-d);font-weight:400;font-size:24px;line-height:1.1}
+.dish span{grid-column:1;color:#5b4a3e;font-size:15px}
+.dish em{grid-row:1;grid-column:2;font-style:normal;font-family:var(--f-m);font-size:14px;align-self:start;padding-top:4px}
+.menu-note{margin-top:22px;font-size:13px;color:#6d5b4d}
+.room{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(30px,5vw,80px);align-items:center}
+.room figure{margin:0;position:relative;border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:#1b130e}
+.room figure img{width:100%;height:100%;object-fit:cover}
+.pill{position:absolute;left:12px;bottom:12px;font-family:var(--f-m);font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:rgba(7,5,4,.78);color:var(--cream2);padding:6px 9px;border-radius:6px}
+.visit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:40px}
+.visit div{background:var(--char2);padding:24px}
+.visit h3{margin:0 0 10px;color:var(--ember)}
+.visit p{margin:0;color:var(--cream2)}
+.visit small{display:block;color:var(--muted2);font-size:13px;margin-top:6px}
+table.hours{border-collapse:collapse;width:100%;font-size:15px;color:var(--cream2)}
+table.hours td{padding:3px 0}
+table.hours td:last-child{text-align:right;font-family:var(--f-m);font-size:13px}
+
+/* reservation (demo only) */
+.res{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(30px,5vw,80px);align-items:start}
+form.rf{background:var(--char2);border:1px solid var(--line);border-radius:16px;padding:clamp(20px,3vw,32px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+form.rf label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+form.rf .full{grid-column:1/-1}
+form.rf input,form.rf select,form.rf textarea{font:inherit;font-size:16px;color:var(--cream);background:#120c09;border:1px solid rgba(243,231,216,.2);border-radius:10px;padding:12px 14px;min-width:0}
+form.rf textarea{min-height:90px;resize:vertical}
+form.rf .btn{grid-column:1/-1;justify-self:start}
+.demo-note{grid-column:1/-1;font-size:13px;color:var(--muted2);margin:0}
+.ok{grid-column:1/-1;display:none;background:rgba(85,210,122,.1);border:1px solid rgba(85,210,122,.35);color:#c9f1d4;border-radius:10px;padding:12px 14px;font-size:14px}
+.ok.on{display:block}
+.err{color:#ffb4a0;font-size:13px}
+
+footer{border-top:1px solid var(--line);padding:40px 0 calc(40px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+footer .w{display:flex;flex-wrap:wrap;gap:14px 30px;justify-content:space-between}
+footer p{margin:0;max-width:62ch}
+.mcta{display:none}
+
+@media (max-width:980px){
+  .nav,.open{display:none}.burger{display:block}.hd .btn{display:none}
+  .mnav{position:fixed;inset:var(--hd) 0 auto;z-index:29;background:var(--char);border-bottom:1px solid var(--line);padding:10px var(--gr) 20px var(--g);flex-direction:column}
+  .mnav.on{display:flex}.mnav a{padding:12px 0;font-size:18px;text-decoration:none;border-bottom:1px solid var(--line)}
+  .split,.room,.res{grid-template-columns:1fr}
+  .menu{grid-template-columns:1fr}
+  .visit{grid-template-columns:1fr}
+  .stage::after{background:linear-gradient(0deg,rgba(7,5,4,.95) 0%,rgba(7,5,4,.75) 42%,rgba(7,5,4,0) 70%)}
+  .ch{align-items:flex-end;padding-bottom:70px}
+  .h1{font-size:clamp(44px,12vw,64px)}.h2{font-size:clamp(36px,10vw,50px)}
+  .lead{font-size:16px;margin-bottom:18px}
+  .note{left:calc(12px + env(safe-area-inset-left,0px));right:auto;top:12px;max-width:260px;font-size:11px}
+  .mcta{display:flex;position:fixed;left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40}
+  .mcta .btn{flex:1}
+  footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  form.rf{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* embed (live preview inside the Cromega showcase) */
+.embed .ribbon,.embed .mcta,.embed .burger{display:none}
+.embed body{overflow:hidden}
+.embed .fire{height:calc(100vh - var(--hd))}
+.embed .stage{position:relative;top:0;height:calc(100vh - var(--hd))}
+.embed .progress{display:none}
+</style>
+</head>
+<body>
+<div class="ribbon" role="note"><b>Concept demonstration</b>Ember &amp; Oak is a fictional restaurant created by <a href="/" target="_top">Cromega Agents</a> to show website design and live 3D. No real menu, reservations, reviews or results.</div>
+<header class="hd" id="top">
+  <div class="w">
+    <a class="logo" href="#top" aria-label="Ember &amp; Oak, back to top"><b>Ember <i>&amp;</i> Oak</b><span class="tag" title="Fictional business — concept demonstration">Concept</span></a>
+    <nav class="nav" aria-label="Main"><a href="#fire">The fire</a><a href="#menu">Menu</a><a href="#room">Private dining</a><a href="#visit">Visit</a></nav>
+    <div class="open"><b><i aria-hidden="true"></i>Open tonight</b>4–10 PM · sample hours</div>
+    <a class="btn cta" href="#reserve">Reserve a table</a>
+    <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mnav"><i></i></button>
+  </div>
+</header>
+<nav class="mnav" id="mnav" aria-label="Mobile"><a href="#fire">The fire</a><a href="#menu">Menu</a><a href="#room">Private dining</a><a href="#visit">Visit</a><a href="#reserve">Reserve a table</a></nav>
+
+<main id="main">
+  <section class="fire" id="fire" aria-label="The wood-fired oven">
+    <div class="stage">
+      <img class="fallback" src="/concepts/ember-oak/img/oven.jpg" alt="3D render of a plastered wood-fired oven with a brick arch and an oak fire burning inside">
+      <div class="scene" id="scene" aria-hidden="true"></div>
+      <p class="note"><b>Live 3D scene.</b> A real-time, illustrative render of a wood-fired oven, not a photo or video.</p>
+      <div class="chapters">
+        <article class="ch on" data-ch="0">
+          <div class="w"><div class="ch-in">
+            <p class="eyebrow mono">Neighborhood kitchen · Wood-fired</p>
+            <h1 class="h1">Fire-cooked, <em>for the whole table.</em></h1>
+            <p class="lead">Seasonal plates from a wood-burning oven, natural wine and a room built for long dinners.</p>
+            <div class="btns"><a class="btn cta" href="#reserve">Reserve a table</a><a class="btn ghost" href="#menu">See the menu</a></div>
+            <ul class="facts"><li>Walk-ins at the bar</li><li>Groups up to 14</li><li>Sample hours: 4–10 PM</li></ul>
+          </div></div>
+        </article>
+        <article class="ch" data-ch="1">
+          <div class="w"><div class="ch-in">
+            <p class="eyebrow mono">01 · The oven</p>
+            <h2 class="h2">One oven. <em>Oak only.</em></h2>
+            <p class="lead">Everything on the menu passes through the same dome. Split oak burns down to a bed of coals, and the heat rolls across the ceiling and back down onto the floor.</p>
+            <div class="btns"><a class="btn cta" href="#reserve">Book the chef's counter</a></div>
+          </div></div>
+        </article>
+        <article class="ch" data-ch="2">
+          <div class="w"><div class="ch-in">
+            <p class="eyebrow mono">02 · The fire</p>
+            <h2 class="h2">Straight from the fire <em>to your table.</em></h2>
+            <p class="lead">Bread that blisters in ninety seconds, trout that takes on smoke, vegetables charred at the edges. Shared plates, passed hand to hand.</p>
+            <div class="btns"><a class="btn cta" href="#reserve">Reserve a table</a><a class="btn ghost" href="#menu">From the oven</a></div>
+          </div></div>
+        </article>
+      </div>
+      <div class="progress" aria-hidden="true"><i><b></b></i><i><b></b></i><i><b></b></i></div>
+    </div>
+  </section>
+
+  <section class="sec cream" id="menu" aria-labelledby="h-menu">
+    <div class="w split">
+      <div>
+        <p class="eyebrow mono">Sample menu</p>
+        <h2 class="h2" id="h-menu">Tonight, <em>from the oven.</em></h2>
+        <p class="lead">A short menu that changes with what the farms bring in. Order a few things and share them.</p>
+        <a class="btn cta" href="#reserve">Reserve a table</a>
+      </div>
+      <div>
+        <div class="menu">
+          <div>
+            <h3>From the oven</h3>
+            <div class="dish"><b>Wood-fired trout</b><em>$28</em><span>Brown butter, charred lemon, capers</span></div>
+            <div class="dish"><b>Blistered flatbread</b><em>$14</em><span>Whipped ricotta, honey, chili</span></div>
+            <div class="dish"><b>Half chicken</b><em>$26</em><span>Salsa verde, roasted onions</span></div>
+            <div class="dish"><b>Ember-roasted carrots</b><em>$12</em><span>Carrot-top pesto, yogurt</span></div>
+          </div>
+          <div>
+            <h3>To start &amp; to finish</h3>
+            <div class="dish"><b>Smoked olives</b><em>$7</em><span>Orange zest, rosemary</span></div>
+            <div class="dish"><b>Charred greens</b><em>$11</em><span>Garlic, lemon, toasted breadcrumbs</span></div>
+            <div class="dish"><b>Skillet cookie</b><em>$10</em><span>Brown sugar, sea salt, cream</span></div>
+            <div class="dish"><b>Roasted stone fruit</b><em>$11</em><span>Mascarpone, oat crumble</span></div>
+          </div>
+        </div>
+        <p class="menu-note">Sample menu and prices for a fictional restaurant, shown to demonstrate the layout.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="room" aria-labelledby="h-room">
+    <div class="w room">
+      <figure><img src="/concepts/ember-oak/img/room.jpg" alt="3D render of the oven's brick arch and the fire inside, seen up close" loading="lazy"><span class="pill">Illustrative 3D render</span></figure>
+      <div>
+        <p class="eyebrow mono">Private dining</p>
+        <h2 class="h2" id="h-room">A long table <em>by the fire.</em></h2>
+        <p class="lead">Seat up to fourteen at the chef's counter facing the oven, with a set menu served family-style. Tell us the date and we'll send options.</p>
+        <a class="btn cta" href="#reserve">Ask about a group dinner</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="visit" aria-labelledby="h-visit" style="padding-top:0">
+    <div class="w">
+      <p class="eyebrow mono">Visit</p>
+      <h2 class="h2" id="h-visit">Come hungry. <em>Stay late.</em></h2>
+      <div class="visit">
+        <div><h3 class="mono">Hours</h3><table class="hours"><tr><td>Tue–Thu</td><td>4–10 PM</td></tr><tr><td>Fri–Sat</td><td>4–11 PM</td></tr><tr><td>Sunday</td><td>4–9 PM</td></tr><tr><td>Monday</td><td>Closed</td></tr></table><small>Sample hours for a fictional restaurant.</small></div>
+        <div><h3 class="mono">Find us</h3><p>Main Street, downtown</p><small>Fictional location — no real address.</small></div>
+        <div><h3 class="mono">Call</h3><p>(555) 010-0142</p><small>Fictional number.</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec cream" id="reserve" aria-labelledby="h-res">
+    <div class="w res">
+      <div>
+        <p class="eyebrow mono">Reservations</p>
+        <h2 class="h2" id="h-res">Save a seat <em>by the oven.</em></h2>
+        <p class="lead">Pick a night and party size. Bar seats are kept open for walk-ins.</p>
+      </div>
+      <form class="rf" id="rf" novalidate>
+        <label>Name<input name="name" autocomplete="name" required></label>
+        <label>Party size<select name="party"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7–14 (group)</option></select></label>
+        <label>Date<input name="date" type="date" required></label>
+        <label>Time<select name="time"><option>5:00 PM</option><option>5:30 PM</option><option>6:00 PM</option><option selected>6:30 PM</option><option>7:00 PM</option><option>7:30 PM</option><option>8:00 PM</option><option>8:30 PM</option></select></label>
+        <label class="full">Anything we should know?<textarea name="notes" placeholder="Allergies, celebrations, seating"></textarea></label>
+        <p class="err full" id="rf-err" role="alert" hidden></p>
+        <button class="btn cta" type="submit">Request a table</button>
+        <p class="demo-note">This form is part of a concept demonstration and isn't connected. Nothing is sent or booked.</p>
+        <p class="ok" id="rf-ok" role="status">Demo only: this is where a real reservation would be confirmed. Nothing was sent.</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="w">
+    <p><b style="color:var(--cream)">Concept demonstration.</b> Ember &amp; Oak is a fictional restaurant. This website and its live 3D oven were designed and built by <a href="/" target="_top">Cromega Agents</a> to show what a custom website can do. There is no real restaurant, menu, reservation system, review or result.</p>
+    <p class="mono">© Concept by Cromega Agents</p>
+  </div>
+</footer>
+<div class="mcta"><a class="btn cta" href="#reserve">Reserve a table</a></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/concepts/ember-oak/vendor/post.js"></script>
+<script src="/concepts/ember-oak/ember3d.js"></script>
+<script>
+(function () {
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const root = document.documentElement, EMBED = new URLSearchParams(location.search).has("embed");
+  if (EMBED) root.classList.add("embed");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let sc = null;
+  try { if (window.EmberOak3D && window.THREE) { sc = EmberOak3D.create($("#scene"), { progress: 0, still: reduce }); root.classList.add("gl"); } } catch (e) { sc = null; }
+
+  // scroll → camera + chapters
+  const fire = $("#fire"), chs = $$(".ch"), bars = $$(".progress i b");
+  let target = 0, cur = 0, raf = 0;
+  const fromScroll = () => { const r = fire.getBoundingClientRect(), span = fire.offsetHeight - innerHeight; return Math.min(1, Math.max(0, -r.top / Math.max(1, span))); };
+  function chapters(p) {
+    const idx = p < 0.3 ? 0 : p < 0.66 ? 1 : 2;
+    chs.forEach((c, i) => c.classList.toggle("on", i === idx));
+    bars.forEach((b, i) => b.style.setProperty("--f", Math.min(1, Math.max(0, (p - i / 3) * 3))));
+  }
+  function apply(p) { chapters(p); sc && sc.set(p); }
+  let last = 0;
+  function tick(ts) { raf = 0; const dt = last ? Math.min(0.1, (ts - last) / 1000) : 0.016; last = ts; cur += (target - cur) * (reduce ? 1 : 1 - Math.pow(0.0008, dt)); if (Math.abs(target - cur) < 0.0005) cur = target; sc && sc.set(cur); if (cur !== target) raf = requestAnimationFrame(tick); else last = 0; }
+  if (!EMBED) { addEventListener("scroll", () => { target = fromScroll(); chapters(target); if (!raf) raf = requestAnimationFrame(tick); }, { passive: true }); target = cur = fromScroll(); apply(cur); }
+
+  // pause rendering when the oven is off screen
+  if (sc && !reduce && "IntersectionObserver" in window) new IntersectionObserver((es) => es.forEach((en) => (en.isIntersecting ? sc.play() : sc.pause())), { threshold: 0 }).observe($(".stage"));
+
+  // embed: slow push in and out on a loop; the parent page can pause it
+  if (EMBED) {
+    let t0 = performance.now(), on = true, eraf = 0;
+    const loop = (ts) => { eraf = 0; if (!on) return; const t = ((ts - t0) / 1000) % 24, p = 0.5 - 0.5 * Math.cos((t / 24) * Math.PI * 2); apply(p * 0.9); eraf = requestAnimationFrame(loop); };
+    if (!reduce) eraf = requestAnimationFrame(loop); else apply(0.35);
+    addEventListener("message", (e) => { if (e.origin !== location.origin || !e.data) return;
+      if (e.data.ember === "pause" || e.data.peakline === "pause") { on = false; sc && sc.pause(); }
+      if ((e.data.ember === "play" || e.data.peakline === "play") && !on && !reduce) { on = true; sc && sc.play(); eraf = requestAnimationFrame(loop); } });
+  }
+
+  // nav state + mobile menu
+  const burger = $(".burger"), mnav = $("#mnav");
+  burger.addEventListener("click", () => { const o = !mnav.classList.contains("on"); mnav.classList.toggle("on", o); burger.setAttribute("aria-expanded", String(o)); });
+  $$("a", mnav).forEach((a) => a.addEventListener("click", () => { mnav.classList.remove("on"); burger.setAttribute("aria-expanded", "false"); }));
+  if ("IntersectionObserver" in window) { const links = $$(".nav a"), io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) links.forEach((l) => l.classList.toggle("on", l.getAttribute("href") === "#" + en.target.id)); }), { rootMargin: "-45% 0px -50% 0px" }); $$("main section[id]").forEach((s) => io.observe(s)); }
+
+  // reservation form: demo only, nothing is sent
+  const f = $("#rf"), err = $("#rf-err"), ok = $("#rf-ok");
+  const d = f.elements.date; try { const t = new Date(); t.setDate(t.getDate() + 1); d.min = new Date().toISOString().slice(0, 10); d.value = t.toISOString().slice(0, 10); } catch (_) {}
+  f.addEventListener("submit", (e) => { e.preventDefault(); ok.classList.remove("on");
+    if (!f.elements.name.value.trim()) { err.hidden = false; err.textContent = "Please add a name for the reservation."; f.elements.name.focus(); return; }
+    if (!d.value) { err.hidden = false; err.textContent = "Please pick a date."; d.focus(); return; }
+    err.hidden = true; ok.classList.add("on"); });
+})();
+</script>
+</body>
+</html>
