@@ -947,7 +947,8 @@ select.in{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .ba[data-mode="after"]{cursor:pointer}
 .ba-after{transition:clip-path .5s cubic-bezier(.2,.7,.2,1)}
 .ba.dragging .ba-after{transition:none}
-.ba-live{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity .5s;pointer-events:none;background:#EEEAE3}
+.ba-live{position:absolute;inset:0;z-index:2;overflow:hidden;opacity:0;transition:opacity .5s;pointer-events:none;background:#EEEAE3}
+.ms[data-live-src]{cursor:pointer}
 .ba-live.on{opacity:1}
 .ba-live iframe{position:absolute;left:0;top:0;width:1440px;height:900px;border:0;transform-origin:0 0;pointer-events:none}
 .ba-go{position:absolute;left:50%;top:14px;white-space:nowrap;z-index:5;transform:translate(-50%,8px);opacity:0;pointer-events:none;height:40px;padding:0 16px;border:0;border-radius:99px;background:rgba(7,8,11,.86);color:#fff;font:600 13px/1 var(--f-b);cursor:pointer;transition:opacity .3s,transform .3s}
@@ -1063,7 +1064,7 @@ select.in{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
           </ul>
         </div>
         <div class="hero-show" data-show>
-          <div class="crop desk"><div class="pv"><div class="pv-bar"><i></i><i></i><i></i><span>concept · peakline roofing</span></div><div class="ms ms-d" data-clone="tpl-cd"></div></div></div>
+          <div class="crop desk"><div class="pv"><div class="pv-bar"><i></i><i></i><i></i><span>concept · peakline roofing · live</span></div><div class="ms ms-d" data-clone="tpl-cd" data-live-src="/concepts/peakline/?embed=1" data-xa-open role="button" tabindex="0" aria-label="Open the Peakline concept site"></div></div></div>
           <div class="mini crop"><div class="pv"><div class="pv-bar"><i></i><i></i><i></i><span>concept · halden barber co.</span></div><div class="ms ms-a" data-clone="tpl-ca"></div></div></div>
           <div class="cap"><span>Fig. 01 — Design direction · <span class="st cpt">Concept Projects</span></span><a href="#our-work" data-route="our-work">See client work →</a></div>
         </div>
@@ -1818,12 +1819,12 @@ select.in{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="bx-bar">
       <div class="bx-seg" role="group" aria-label="Choose what the showcase shows">
         <button type="button" data-mode="before" aria-pressed="false">Before</button>
-        <button type="button" data-mode="compare" aria-pressed="true">Compare</button>
-        <button type="button" data-mode="after" aria-pressed="false">After <span>· live</span></button>
+        <button type="button" data-mode="compare" aria-pressed="false">Compare</button>
+        <button type="button" data-mode="after" aria-pressed="true">After <span>· live</span></button>
       </div>
       <button type="button" class="bx-open" data-xa-open>Explore the After <span aria-hidden="true">↗</span></button>
     </div>
-    <div class="ba" style="--pos:50%" data-mode="compare">
+    <div class="ba" style="--pos:50%" data-mode="after">
       <div class="ba-l"><div class="ms ms-x" data-clone="tpl-cx"></div></div>
       <div class="ba-l ba-after"><div class="ms ms-d" data-clone="tpl-cd"></div><div class="ba-live" data-live></div></div>
       <div class="ba-line"><button class="ba-h" type="button" role="slider" aria-label="Compare before and after" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></button></div>
@@ -2333,8 +2334,20 @@ select.in{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     btns.forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
     ba.addEventListener("click", (e) => { if (ba.dataset.mode === "after" && !e.target.closest(".ba-go")) openXa(ba); });
     if ("ResizeObserver" in window) new ResizeObserver(fit).observe(ba); else addEventListener("resize", fit);
-    if ("IntersectionObserver" in window) new IntersectionObserver((es) => es.forEach((en) => { seen = en.isIntersecting; if (ba.dataset.mode === "after") post(seen ? "play" : "pause"); }), { threshold: 0.15 }).observe(ba);
-    else seen = true;
+    if ("IntersectionObserver" in window) new IntersectionObserver((es) => es.forEach((en) => { seen = en.isIntersecting; if (ba.dataset.mode === "after") { if (seen && !frame) setMode("after"); else post(seen ? "play" : "pause"); } }), { threshold: 0.15 }).observe(ba);
+    else { seen = true; if (ba.dataset.mode === "after") setMode("after"); }
+  });
+
+  // live concept previews inside mockups (home hero): load when visible, pause when off screen
+  $$(".ms[data-live-src]").forEach((ms) => {
+    const layer = document.createElement("div"); layer.className = "ba-live"; ms.appendChild(layer); let f = null;
+    const fit = () => { if (f) f.style.transform = `scale(${ms.clientWidth / 1440})`; };
+    const post = (m) => { try { f && f.contentWindow && f.contentWindow.postMessage({ peakline: m }, location.origin); } catch (_) {} };
+    const load = () => { if (f) return; f = document.createElement("iframe"); f.title = "Live preview of the Peakline concept website (fictional business)"; f.tabIndex = -1; f.setAttribute("aria-hidden", "true"); f.src = ms.dataset.liveSrc; f.addEventListener("load", () => layer.classList.add("on")); layer.appendChild(f); fit(); };
+    if ("ResizeObserver" in window) new ResizeObserver(fit).observe(ms);
+    ms.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openXa(ms); } });
+    if ("IntersectionObserver" in window) new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { if (!f) setTimeout(load, 600); else post("play"); } else post("pause"); }), { threshold: 0.1 }).observe(ms);
+    else load();
   });
 
   // full-screen "Explore the After" view (the real concept site, scrollable and interactive)
